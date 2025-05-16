@@ -15,8 +15,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4                   # GitHub’s checkout action :contentReference[oaicite:3]{index=3}
 
+      - name: Install PNPM
+        uses: pnpm/action-setup@v4                                          :contentReference[oaicite:1]{index=1}
+        with:
+          # Optional: pin to specific major version; 
+          # omit version to use `packageManager` from package.json
+          version: 10   
+          
       # 2) Setup Node.js and pnpm
-      - name: Setup Node.js and pnpm
+      - name: Setup Node.js
         uses: actions/setup-node@v4                  # Official Node.js setup :contentReference[oaicite:4]{index=4}
         with:
           node-version: 20
