@@ -1,0 +1,42 @@
+name: Build & Deploy to Netlify
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4                   # GitHub’s checkout action :contentReference[oaicite:3]{index=3}
+
+      # 2) Setup Node.js and pnpm
+      - name: Setup Node.js and pnpm
+        uses: actions/setup-node@v4                  # Official Node.js setup :contentReference[oaicite:4]{index=4}
+        with:
+          node-version: 20
+          cache: "pnpm"                              # Enables pnpm caching :contentReference[oaicite:5]{index=5}
+
+      # 3) Install dependencies & build
+      - name: Install dependencies
+        run: pnpm install                           # Installs per pnpm-lock.yaml :contentReference[oaicite:6]{index=6}
+
+      - name: Build project
+        run: pnpm build                             # Runs your build script :contentReference[oaicite:7]{index=7}
+
+      # 4) Deploy via Netlify CLI
+      - name: Deploy to Netlify
+        run: |
+          npm install --global netlify-cli         # Install Netlify CLI
+          netlify deploy --prod                    \
+            --site=$NETLIFY_PROJECT_ID                \
+            --auth=$NETLIFY_ACCESS_TOKEN             \
+            --dir=./dist                           # Replace with your build output folder :contentReference[oaicite:8]{index=8}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_ACCESS_TOKEN }}
+          NETLIFY_SITE_ID:   ${{ secrets.NETLIFY_PROJECT_ID }}
