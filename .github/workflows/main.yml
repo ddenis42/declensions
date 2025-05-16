@@ -10,15 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4                             # v4 is valid :contentReference[oaicite:0]{index=0}
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node.js and pnpm
-        uses: actions/setup-node@v4                            # Official setup-node:contentReference[oaicite:1]{index=1}
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "pnpm"
+
+      # Install pnpm explicitly
+      - name: Install pnpm
+        run: npm install -g pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -35,4 +39,4 @@ jobs:
             --dir=./dist
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID:   ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
