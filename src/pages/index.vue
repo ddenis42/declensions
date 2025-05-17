@@ -28,7 +28,6 @@
     inputFormat: parts,
     outputFormat: parts,
     selectedCases: cases.map(c => c.value),
-    wideOutput: false,
   });
 
   const names = reactive({
@@ -45,8 +44,6 @@
     (settings.inputFormat.length > 0)
     && (settings.outputFormat.length > 0)
     && (settings.selectedCases.length > 0));
-
-  const outputStyle = computed(() => settings.wideOutput ? { width: '100%' } :{ width: '49%' });
 
   watch(
     () => names.nominative + settings.inputFormat + settings.outputFormat,
@@ -128,29 +125,45 @@
 </script>
 
 <template>
-  <v-container>
+  <div class="d-flex flex-wrap">
     <v-row>
-      <v-col>
-        <v-textarea v-model="names.nominative" auto-grow clearable label="Називний (хто?)" />
+      <v-col cols="12" md="4">
+        <div id="settings">
+          <!-- Your settings content here -->
+          <FormatSelect v-model="settings.inputFormat" :items="parts" label="Вхідний формат" />
+          <FormatSelect v-model="settings.outputFormat" :items="parts" label="Вихідний формат" />
+          <FormatSelect
+            v-model="settings.selectedCases"
+            item-title="label"
+            item-value="value"
+            :items="cases"
+            label="Відмінки"
+          />
+        </div>
       </v-col>
-      <v-col>
-        <FormatSelect v-model="settings.inputFormat" :items="parts" label="Вхідний формат" />
-        <FormatSelect v-model="settings.outputFormat" :items="parts" label="Вихідний формат" />
-        <FormatSelect
-          v-model="settings.selectedCases"
-          item-title="label"
-          item-value="value"
-          :items="cases"
-          label="Відмінки"
+      <v-col cols="12" md="8">
+        <v-textarea
+          id="input"
+          v-model="names.nominative"
+          auto-grow
+          class="fill-height"
+          clearable
+          label="Називний (хто?)"
         />
-        <v-switch v-model="settings.wideOutput" label="Широкий вивід" />
       </v-col>
     </v-row>
+  </div>
 
-    <v-row class="justify-space-between">
-      <div v-for="(selectedCase) in settings.selectedCases" :key="selectedCase.value" :style="outputStyle">
+  <div id="output" class="d-flex flex-wrap justify-space-between">
+    <v-row>
+      <v-col
+        v-for="(selectedCase) in settings.selectedCases"
+        :key="selectedCase"
+        cols="12"
+        lg="6"
+      >
         <ResultList v-model="names[selectedCase]" :label="cases.find(c => c.value === selectedCase).label" />
-      </div>
+      </v-col>
     </v-row>
-  </v-container>
+  </div>
 </template>

@@ -51,6 +51,7 @@
     :label="props.label"
     readonly
     rows="1"
+    style="width: 100%"
   />
 
   <v-snackbar v-model="showSnackbar" color="success" :timeout="1000">
