@@ -2,7 +2,7 @@
   <AppHeader />
 
   <v-main>
-    <div style="margin: 0 5%">
+    <div style="margin: 1% 5%">
       <router-view />
     </div>
   </v-main>
