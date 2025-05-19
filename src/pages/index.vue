@@ -117,7 +117,7 @@
   });
 
   watch(
-    () => settings.inputFormat + settings.outputFormat,
+    settings,
     async () => {
       localStorage.setItem('settings', JSON.stringify(settings));
     }
