@@ -104,24 +104,24 @@
     }
   );
 
-  onBeforeMount(() => loadSettings());
+  onBeforeMount(() => {
+    try {
+      const storedSettings = localStorage.getItem('settings');
+
+      if (storedSettings) {
+        Object.assign(settings, JSON.parse(storedSettings));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  });
 
   watch(
     () => settings.inputFormat + settings.outputFormat,
-    async () => storeSettings()
-  )
-
-  const storeSettings = () => {
-    localStorage.setItem('settings', JSON.stringify(settings));
-  };
-
-  const loadSettings = () => {
-    const storedSettings = localStorage.getItem('settings');
-
-    if (storedSettings) {
-      Object.assign(settings, JSON.parse(storedSettings));
+    async () => {
+      localStorage.setItem('settings', JSON.stringify(settings));
     }
-  };
+  )
 </script>
 
 <template>
