@@ -18,5 +18,6 @@
     :items="props.items"
     :label="props.label"
     multiple
+    variant="underlined"
   />
 </template>

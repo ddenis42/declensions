@@ -1,13 +1,15 @@
 <script setup>
+  import { mdiGithub, mdiLinkedin } from '@mdi/js'
+
   const items = [
     {
       title: 'Declensions GitHub',
-      icon: `mdi-github`,
+      icon: mdiGithub,
       href: 'https://github.com/ddenis42/declensions',
     },
     {
       title: 'Denys Demydovych',
-      icon: `mdi-linkedin`,
+      icon: mdiLinkedin,
       href: 'https://www.linkedin.com/in/demydovych',
     },
   ]
