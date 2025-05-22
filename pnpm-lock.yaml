@@ -20,6 +20,9 @@ importers:
       vue:
         specifier: ^3.5.13
         version: 3.5.14(typescript@5.8.3)
+      vue-gtag:
+        specifier: ^3.5.0
+        version: 3.5.0(vue-router@4.5.1(vue@3.5.14(typescript@5.8.3)))(vue@3.5.14(typescript@5.8.3))
       vuetify:
         specifier: ^3.8.1
         version: 3.8.5(typescript@5.8.3)(vite-plugin-vuetify@2.1.1)(vue@3.5.14(typescript@5.8.3))
@@ -1856,6 +1859,15 @@ packages:
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
+
+  vue-gtag@3.5.0:
+    resolution: {integrity: sha512-eycDX/wg0iQSxSMn8dm+oQ7HxfHxzMxF7UPzqVlE8MaDqS8p9iTmjIyZfurMN5Jb8n4bcZMK08pEydSu2wR22w==}
+    peerDependencies:
+      vue: ^3.5.13
+      vue-router: ^4.5.0
+    peerDependenciesMeta:
+      vue-router:
+        optional: true
 
   vue-router@4.5.1:
     resolution: {integrity: sha512-ogAF3P97NPm8fJsE4by9dwSYtDwXIY1nFY9T6DyQnGHd1E2Da94w9JIolpe42LJGIl0DwOHBi8TcRPlPGwbTtw==}
@@ -3728,6 +3740,12 @@ snapshots:
       semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
+
+  vue-gtag@3.5.0(vue-router@4.5.1(vue@3.5.14(typescript@5.8.3)))(vue@3.5.14(typescript@5.8.3)):
+    dependencies:
+      vue: 3.5.14(typescript@5.8.3)
+    optionalDependencies:
+      vue-router: 4.5.1(vue@3.5.14(typescript@5.8.3))
 
   vue-router@4.5.1(vue@3.5.14(typescript@5.8.3)):
     dependencies:
