@@ -1,6 +1,6 @@
 <script setup>
   import FormatSelect from '@/components/FormatSelect.vue';
-  import ResultList from '@/components/ResultList.vue';
+  import ResultTextarea from '@/components/ResultTextarea.vue';
   import * as shevchenko from 'shevchenko';
   import { militaryExtension } from 'shevchenko-ext-military';
   import { onBeforeMount, reactive, watch } from 'vue';
@@ -162,7 +162,7 @@
         cols="12"
         lg="6"
       >
-        <ResultList v-model="names[selectedCase]" :label="cases.find(c => c.value === selectedCase).label" />
+        <ResultTextarea v-model="names[selectedCase]" :label="cases.find(c => c.value === selectedCase).label" />
       </v-col>
     </v-row>
   </div>
