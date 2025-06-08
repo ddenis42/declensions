@@ -1,11 +1,10 @@
 <script setup>
-
   import { copyToClipboard } from '@/copy.js';
   import { mdiContentCopy } from '@mdi/js';
 
   const model = defineModel();
   const props = defineProps({
-    label: { required: false, type: String, default: 'N/A' },
+    label: { required: true, type: String },
   });
   const modelText = computed(() => model.value.join('\n'));
 </script>
