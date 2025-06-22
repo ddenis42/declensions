@@ -1,7 +1,8 @@
 <script setup>
+  import * as shevchenko from 'shevchenko';
   import FormatSelect from '@/components/FormatSelect.vue';
   import ResultTextarea from '@/components/ResultTextarea.vue';
-  import * as shevchenko from 'shevchenko';
+  import { debounce } from '@/utils/debounce.js';
   import { militaryExtension } from 'shevchenko-ext-military';
   import { onBeforeMount, reactive, watch } from 'vue';
 
@@ -46,50 +47,54 @@
     && (settings.selectedCases.length > 0)
   );
 
+  const decline = async () => {
+    if (!isFormatSet.value) return;
+
+    const payloads = await Promise.all(
+      names.nominative.toString()
+        .split('\n')
+        .map(row => row.trim())
+        .filter(row => row)
+        .map(row => {
+          const rawSplit = row.split(/\s+/);
+
+          let result = rawSplit;
+
+          if (rawSplit.length > settings.inputFormat.length) {
+            const first = rawSplit.slice(0, rawSplit.length - settings.inputFormat.length + 1).join(' ');
+            result = [first, ...rawSplit.slice(rawSplit.length - settings.inputFormat.length + 1)];
+          }
+
+          return result;
+        })
+        .map(async function (rowParts) {
+          const genderValue = await shevchenko.detectGender({
+            familyName: rowParts[settings.inputFormat.indexOf('familyName')],
+            givenName: rowParts[settings.inputFormat.indexOf('givenName')],
+            patronymicName: rowParts[settings.inputFormat.indexOf('patronymicName')],
+          }).catch(() => null) ?? 'masculine';
+
+          const payload = { gender: genderValue };
+
+          formatParts.forEach(o => payload[o.value] = rowParts[settings.inputFormat.indexOf(o.value)]);
+
+          return payload;
+        })
+    );
+
+    cases.forEach(async c => {
+      names[c.value] = await Promise.all(payloads.map(
+        async payload => await c.func(payload)
+          .then(result => settings.outputFormat.map(option => result[option]).filter(e => e).join(' '))
+      ));
+    });
+  };
+
+  const debouncedDecline = debounce(() => decline(), 300);
+
   watch(
     () => names.nominative + settings.inputFormat + settings.outputFormat,
-    async () => {
-      if (!isFormatSet.value) return;
-
-      const payloads = await Promise.all(
-        names.nominative.toString()
-          .split('\n')
-          .map(row => row.trim())
-          .filter(row => row)
-          .map(row => {
-            const rawSplit = row.split(/\s+/);
-
-            let result = rawSplit;
-
-            if (rawSplit.length > settings.inputFormat.length) {
-              const first = rawSplit.slice(0, rawSplit.length - settings.inputFormat.length + 1).join(' ');
-              result = [first, ...rawSplit.slice(rawSplit.length - settings.inputFormat.length + 1)];
-            }
-
-            return result;
-          })
-          .map(async function (rowParts) {
-            const genderValue = await shevchenko.detectGender({
-              familyName: rowParts[settings.inputFormat.indexOf('familyName')],
-              givenName: rowParts[settings.inputFormat.indexOf('givenName')],
-              patronymicName: rowParts[settings.inputFormat.indexOf('patronymicName')],
-            }).catch(() => null) ?? 'masculine';
-
-            const payload = { gender: genderValue };
-
-            formatParts.forEach(o => payload[o.value] = rowParts[settings.inputFormat.indexOf(o.value)]);
-
-            return payload;
-          })
-      );
-
-      cases.forEach(async c => {
-        names[c.value] = await Promise.all(payloads.map(
-          async payload => await c.func(payload)
-            .then(result => settings.outputFormat.map(option => result[option]).filter(e => e).join(' '))
-        ));
-      });
-    }
+    () => debouncedDecline(),
   );
 
   onBeforeMount(() => {
@@ -106,7 +111,9 @@
     settings.selectedCases = storedSettings.selectedCases.filter(s => allowedCases.includes(s));
   });
 
-  watch(settings, async () => {localStorage.setItem('settings', JSON.stringify(settings));});
+  watch(settings, async () => {
+    localStorage.setItem('settings', JSON.stringify(settings));
+  });
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script setup>
-  import { copyToClipboard } from '@/copy.js';
+  import { copyToClipboard } from '@/utils/copy.js';
   import { mdiContentCopy } from '@mdi/js';
 
   const model = defineModel();
