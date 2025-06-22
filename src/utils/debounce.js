@@ -2,8 +2,9 @@ export function debounce (fn, wait = 300) {
   let timeoutId
   return function (...args) {
     clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => {
-      fn.apply(this, args)
-    }, wait)
+    timeoutId = setTimeout(
+      () => fn.apply(this, args),
+      wait
+    )
   }
 }

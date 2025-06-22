@@ -7,6 +7,10 @@
     itemTitle: undefined,
     itemValue: undefined,
   })
+
+  const rules = [
+    value => value?.length > 0 || 'Виберіть значення.',
+  ]
 </script>
 
 <template>
@@ -18,6 +22,7 @@
     :items="props.items"
     :label="props.label"
     multiple
+    :rules="rules"
     variant="underlined"
   />
 </template>

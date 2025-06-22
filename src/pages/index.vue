@@ -117,6 +117,13 @@
 </script>
 
 <template>
+  <v-alert
+    v-if="settings.inputFormat?.length < 1 || settings.outputFormat?.length < 1 || settings.selectedCases?.length < 1"
+    style="margin: 1rem 0;"
+    text="Виберіть вхідний і вихідний формати та бажані відмінки."
+    type="warning"
+  />
+
   <div class="d-flex flex-wrap">
     <v-row>
       <v-col id="settings" cols="12" md="4">
