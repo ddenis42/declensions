@@ -122,6 +122,7 @@
     style="margin: 1rem 0;"
     text="Виберіть вхідний і вихідний формати та бажані відмінки."
     type="warning"
+    variant="tonal"
   />
 
   <div class="d-flex flex-wrap">
