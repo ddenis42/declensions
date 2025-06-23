@@ -3,10 +3,11 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import Fonts from 'unplugin-fonts/vite'
 import Layouts from 'vite-plugin-vue-layouts-next'
+import Sitemap from 'vite-plugin-sitemap'
 import Vue from '@vitejs/plugin-vue'
 import VueRouter from 'unplugin-vue-router/vite'
-import { VueRouterAutoImports } from 'unplugin-vue-router'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import { VueRouterAutoImports } from 'unplugin-vue-router'
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -49,6 +50,7 @@ export default defineConfig({
       },
       vueTemplate: true,
     }),
+    Sitemap({ hostname: 'https://declensions.netlify.app/' }),
   ],
   optimizeDeps: {
     exclude: [

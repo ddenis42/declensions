@@ -1,18 +1,19 @@
 <script setup>
+  import * as shevchenko from 'shevchenko';
   import FormatSelect from '@/components/FormatSelect.vue';
   import ResultTextarea from '@/components/ResultTextarea.vue';
-  import * as shevchenko from 'shevchenko';
+  import { debounce } from '@/utils/debounce.js';
   import { militaryExtension } from 'shevchenko-ext-military';
   import { onBeforeMount, reactive, watch } from 'vue';
 
   shevchenko.registerExtension(militaryExtension);
 
-  const parts = [
-    'посада',
-    'звання',
-    'Прізвище',
-    'Імʼя',
-    'По батькові',
+  const formatParts = [
+    { label: 'посада', value: 'militaryAppointment' },
+    { label: 'звання', value: 'militaryRank' },
+    { label: 'Прізвище', value: 'familyName' },
+    { label: 'Ім`я', value: 'givenName' },
+    { label: 'По батькові', value: 'patronymicName' },
   ]
 
   const cases = [
@@ -25,8 +26,8 @@
   ];
 
   const settings = reactive({
-    inputFormat: parts,
-    outputFormat: parts,
+    inputFormat: formatParts.map(o => o.value),
+    outputFormat: formatParts.map(o => o.value),
     selectedCases: cases.map(c => c.value),
   });
 
@@ -43,105 +44,116 @@
   const isFormatSet = computed(() =>
     (settings.inputFormat.length > 0)
     && (settings.outputFormat.length > 0)
-    && (settings.selectedCases.length > 0));
+    && (settings.selectedCases.length > 0)
+  );
+
+  const decline = async () => {
+    if (!isFormatSet.value) return;
+
+    const payloads = await Promise.all(
+      names.nominative.toString()
+        .split('\n')
+        .map(row => row.trim())
+        .filter(row => row)
+        .map(row => {
+          const rawSplit = row.split(/\s+/);
+
+          let result = rawSplit;
+
+          if (rawSplit.length > settings.inputFormat.length) {
+            const first = rawSplit.slice(0, rawSplit.length - settings.inputFormat.length + 1).join(' ');
+            result = [first, ...rawSplit.slice(rawSplit.length - settings.inputFormat.length + 1)];
+          }
+
+          return result;
+        })
+        .map(async function (rowParts) {
+          const genderValue = await shevchenko.detectGender({
+            familyName: rowParts[settings.inputFormat.indexOf('familyName')],
+            givenName: rowParts[settings.inputFormat.indexOf('givenName')],
+            patronymicName: rowParts[settings.inputFormat.indexOf('patronymicName')],
+          }).catch(() => null) ?? 'masculine';
+
+          const payload = { gender: genderValue };
+
+          formatParts.forEach(o => payload[o.value] = rowParts[settings.inputFormat.indexOf(o.value)]);
+
+          return payload;
+        })
+    );
+
+    cases.forEach(async c => {
+      names[c.value] = await Promise.all(payloads.map(
+        async payload => await c.func(payload)
+          .then(result => settings.outputFormat.map(option => result[option]).filter(e => e).join(' '))
+      ));
+    });
+  };
+
+  const debouncedDecline = debounce(() => decline(), 300);
 
   watch(
     () => names.nominative + settings.inputFormat + settings.outputFormat,
-    async () => {
-      const payloads = names.nominative.toString()
-        .split('\n')
-        .filter(row => row && isFormatSet)
-        .map(row => {
-          const rawSplit = row.trim().split(/\s+/);
-          if (rawSplit.length > settings.inputFormat.length) {
-            const first = rawSplit.slice(0, rawSplit.length - settings.inputFormat.length + 1).join(' ');
-            return [first, ...rawSplit.slice(rawSplit.length - settings.inputFormat.length + 1)];
-          } else {
-            return rawSplit;
-          }
-        })
-        .map(parts => ({
-          gender: 'masculine',
-          militaryAppointment: parts[settings.inputFormat.indexOf('посада')],
-          militaryRank: parts[settings.inputFormat.indexOf('звання')],
-          familyName: parts[settings.inputFormat.indexOf('Прізвище')],
-          givenName: parts[settings.inputFormat.indexOf('Імʼя')],
-          patronymicName: parts[settings.inputFormat.indexOf('По батькові')],
-        }));
-
-      if (isFormatSet.value) {
-        const declensions = await Promise.all(cases.map(async c => {
-          const values = await Promise.all(payloads.map(
-            async payload => await c.func(payload)
-              .then(result => {
-                const out = [];
-                if (settings.outputFormat.indexOf('посада') >= 0) {
-                  out[settings.outputFormat.indexOf('посада')] = result.militaryAppointment;
-                }
-                if (settings.outputFormat.indexOf('звання') >= 0) {
-                  out[settings.outputFormat.indexOf('звання')] = result.militaryRank;
-                }
-                if (settings.outputFormat.indexOf('Прізвище') >= 0) {
-                  out[settings.outputFormat.indexOf('Прізвище')] = result.familyName;
-                }
-                if (settings.outputFormat.indexOf('Імʼя') >= 0) {
-                  out[settings.outputFormat.indexOf('Імʼя')] = result.givenName;
-                }
-                if (settings.outputFormat.indexOf('По батькові') >= 0) {
-                  out[settings.outputFormat.indexOf('По батькові')] = result.patronymicName;
-                }
-                return out.join(' ');
-              }
-              )
-          ));
-          return { case: c.value, values };
-        }));
-
-        declensions.forEach(declension => {
-          names[declension.case] = declension.values;
-        });
-      }
-    }
+    () => debouncedDecline(),
   );
 
   onBeforeMount(() => {
-    try {
-      const storedSettings = localStorage.getItem('settings');
+    const storedValue = localStorage.getItem('settings');
+    if (!storedValue) return;
 
-      if (storedSettings) {
-        Object.assign(settings, JSON.parse(storedSettings));
-      }
-    } catch (error) {
-      console.error(error);
-    }
+    const storedSettings = JSON.parse(storedValue);
+
+    const allowedFormat = formatParts.map(fp => fp.value);
+    settings.inputFormat = storedSettings.inputFormat.filter(s => allowedFormat.includes(s));
+    settings.outputFormat = storedSettings.outputFormat.filter(s => allowedFormat.includes(s));
+
+    const allowedCases = cases.map(c => c.value);
+    settings.selectedCases = storedSettings.selectedCases.filter(s => allowedCases.includes(s));
   });
 
-  watch(
-    settings,
-    async () => {
-      localStorage.setItem('settings', JSON.stringify(settings));
-    }
-  )
+  watch(settings, async () => {
+    localStorage.setItem('settings', JSON.stringify(settings));
+  });
 </script>
 
 <template>
+  <v-alert
+    v-if="settings.inputFormat?.length < 1 || settings.outputFormat?.length < 1 || settings.selectedCases?.length < 1"
+    style="margin: 1rem 0;"
+    text="Виберіть вхідний і вихідний формати та бажані відмінки."
+    type="warning"
+    variant="tonal"
+  />
+
   <div class="d-flex flex-wrap">
     <v-row>
-      <v-col cols="12" md="4">
-        <div id="settings">
-          <!-- Your settings content here -->
-          <FormatSelect v-model="settings.inputFormat" :items="parts" label="Вхідний формат" />
-          <FormatSelect v-model="settings.outputFormat" :items="parts" label="Вихідний формат" />
-          <FormatSelect
-            v-model="settings.selectedCases"
-            item-title="label"
-            item-value="value"
-            :items="cases"
-            label="Відмінки"
-          />
-        </div>
+      <v-col id="settings" cols="12" md="4">
+        <FormatSelect
+          v-model="settings.inputFormat"
+          item-title="label"
+          item-value="value"
+          :items="formatParts"
+          label="Вхідний формат"
+        />
+
+        <FormatSelect
+          v-model="settings.outputFormat"
+          item-title="label"
+          item-value="value"
+          :items="formatParts"
+          label="Вихідний формат"
+        />
+
+        <FormatSelect
+          v-model="settings.selectedCases"
+          item-title="label"
+          item-value="value"
+          :items="cases"
+          label="Відмінки"
+        />
       </v-col>
-      <v-col cols="12" md="8">
+
+      <v-col id="nominativeInput" cols="12" md="8">
         <v-textarea
           id="input"
           v-model="names.nominative"

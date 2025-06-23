@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://declensions.netlify.app/sitemap.xml
